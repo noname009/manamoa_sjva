@@ -7,5 +7,6 @@
     "proxy_url" : "",
     "downlist" : [],
     "discord_webhook" : "False",
-    "discord_webhook_url" : ""
+    "discord_webhook_url" : "",
+    "pagecount" : "1"
 }
