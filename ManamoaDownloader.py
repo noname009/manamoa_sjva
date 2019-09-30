@@ -131,6 +131,10 @@ class LogicMD(object):
         try:
             title = LogicMD.titlereplace(title).replace(' ', '')
             flag = False
+            if len(LogicMD.json_data['downlist']) == 1:
+                if LogicMD.json_data['downlist'][0] == '':
+                    flag = True
+                    return flag
             if len(LogicMD.json_data['downlist']) != 0:
                 for downcheck in LogicMD.json_data['downlist']:
                     downcheck = downcheck.strip()
