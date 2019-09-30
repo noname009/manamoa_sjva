@@ -133,9 +133,13 @@ class LogicMD(object):
             flag = False
             if len(LogicMD.json_data['downlist']) != 0:
                 for downcheck in LogicMD.json_data['downlist']:
-                    if title.find(LogicMD.titlereplace(downcheck).replace(' ', '')) != -1:
-                        flag = True
-                        break
+                    downcheck = downcheck.strip()
+                    if downcheck == '':
+                        pass
+                    else:
+                        if title.find(LogicMD.titlereplace(downcheck).replace(' ', '')) != -1:
+                            flag = True
+                            break
             else:
                 flag = True
         except Exception as e:
@@ -274,6 +278,8 @@ class LogicMD(object):
                         for t in soup.find_all('div', 'pull-right post-info'):
                             url = '{}{}'.format(LogicMD.json_data['sitecheck'], t.find('a')['href'])
                             LogicMD.all_episode_download(url)
+                            if LogicMD.stop_flag:
+                                break
                 else:
                     event = {'type':'recent_episode'}
                     event['list'] = []
@@ -312,12 +318,13 @@ class LogicMD(object):
             item['url'] = LogicMD.json_data['sitecheck'] + a_tags[2]['href']
             item['title'] = a_tags[2].text.replace(' NEW ','').strip()
             item['title'] = LogicMD.titlereplace(item['title'])
-            match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>\w.*?화))?(\s\(완결\))?\s?$').match(item['title'])
-            if match:
-                item['main'] = match.group('main')
-            else:
-                item['main'] = item['title']
-                logger.debug('not match')
+            item['main'] = item['title'].replace(item['title'].split(' ')[-1],'').strip()
+            #match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>\w.*?화))?(\s\(완결\))?\s?$').match(item['title'])
+            #if match:
+            #    item['main'] = match.group('main')
+            #else:
+            #    item['main'] = item['title']
+            #    logger.debug('not match')
             p_tags = tag.find_all('p')
             tmp = p_tags[1].text
             item['score'] = int(tmp.split(' ')[1])
