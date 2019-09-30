@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.setting_global_scheduler_button(arg['scheduler'], arg['is_running']) }}
+  <form id='setting' name='setting'>
+  {{ macros.setting_input_int('interval', '스케쥴링 실행 주기', value=arg['interval'], min='1', placeholder='10', desc='minute 단위') }}
+  {{ macros.setting_checkbox('auto_start', '시작시 자동실행', value=arg['auto_start'], desc='On : 시작시 자동으로 스케쥴러에 등록됩니다.') }}
+  
+  {{ macros.setting_input_text_and_buttons('sitecheck', 'Site URL', [['go_btn', 'GO']], value=arg['sitecheck'], desc=None) }}
+  {{ macros.setting_input_textarea('downlist', '자동 다운로드 할 만화 이름', value=arg['downlist'], row='5', desc=['구분자 |', '빈칸인 경우 모두 다운로드합니다.']) }}
+  {{ macros.setting_input_text('dfolder', '다운로드 경로', value=arg['dfolder'], desc=['다운로드 경로입니다.', 'SJVA Root 경로가 포함되어 있어야 뷰어를 통해 볼 수 있습니다.']) }}
+  <!--{{ macros.setting_checkbox('all_download', 'All Download', value=arg['all_download'], desc='On : 새로 올라온 만화의 모든 화를 다운받습니다.') }}-->
+  {{ macros.setting_checkbox('zip', 'ZIP', value=arg['zip'], desc=['On : 압축', 'Off : 개별 파일']) }}
+  {{ macros.setting_checkbox('cloudflare_bypass', 'Cloudflare Bypass', value=arg['cloudflare_bypass'], desc=['클라우드플레어 우회 옵션입니다. On 우회, Off 비우회']) }}
+  {{ macros.setting_checkbox('proxy', 'Proxy', value=arg['proxy'], desc=['proxy서버 적용 옵션입니다. On 적용, Off 비적용']) }}
+  <div id="proxy_div" class="collapse">
+  {{ macros.setting_input_text('proxy_url', 'Proxy URL', value=arg['proxy_url'], desc=['Proxy를 On 했을때 적용할 프록시 서버 주소입니다.']) }}
+  </div>
+  {{ macros.setting_checkbox('discord_webhook', '디스코드 알림', value=arg['discord_webhook'], desc=['디스코드로 다운로드 진행 메시지, 사이트 접속상태 메시지등을 보내기 위한 옵션입니다.']) }}
+  <div id="discord_webhook_div" class="collapse">
+  {{ macros.setting_input_text('discord_webhook_url', 'Webhook URL', value=arg['discord_webhook_url'], desc=['디스코드 알림 옵션을 On 했을시 적용할 디스코드 웹훅 주소입니다.']) }}
+  </div>
+  {{ macros.setting_button([['global_setting_save_btn', '저장']]) }}
+  </form>
+  {{ macros.m_hr() }}
+  {{ macros.setting_button([['global_one_execute_btn', '1회 실행']], left='1회 실행' ) }}
+  {{ macros.setting_button([['global_reset_db_btn', '목록 전체 지우기']], left='DB정리' ) }}
+</div>
+
+<script type="text/javascript">
+var package_name = 'manamoa';
+var current_data = null;
+
+$(document).ready(function(){
+  use_collapse('proxy');
+  use_collapse('discord_webhook');
+  
+});
+
+$('#proxy').change(function() {
+  use_collapse('proxy');
+});
+
+$('#discord_webhook').change(function() {
+  use_collapse('discord_webhook');
+});
+
+$("body").on('click', '#go_btn', function(e){
+  e.preventDefault();
+  url = document.getElementById("sitecheck").value
+  window.open(url, "_blank");
+});
+</script>    
+{% endblock %}

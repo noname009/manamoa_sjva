@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div>
+  {{ macros.setting_input_text_and_buttons('manga_id', 'Manga ID', [['download_btn', '다운로드']], desc=None, col='6') }}
+  {{ macros.info_text_and_buttons('status', '상태', [['stop_btn', '중지']]) }}
+  
+  {{ macros.m_row_start('0') }}
+  {{ macros.m_row_end() }}
+
+  {{ macros.m_hr_head_top() }}
+  {{ macros.m_row_start('0') }}
+  {{ macros.m_col(5,  macros.m_strong('Tiele')) }}
+  {{ macros.m_col(1,  macros.m_strong('Downlist')) }}
+  {{ macros.m_col(1,  macros.m_strong('Already')) }}
+  {{ macros.m_col(3,  macros.m_strong('Percent')) }}
+  {{ macros.m_col(2,  macros.m_strong('Action')) }}
+  {{ macros.m_row_end() }}
+  {{ macros.m_hr_head_bottom() }}
+  <div id="download_list_div"></div>
+</div> <!--전체-->
+
+
+<script type="text/javascript">
+var package_name = 'manamoa';
+var current_data = null;
+
+$(document).ready(function(){
+  var protocol = window.location.protocol;
+  socket = io.connect(protocol + "//" + document.domain + ":" + location.port + "/" + package_name);
+
+  socket.on('on_connect', function(data){
+    on_start(data);
+  });
+
+  socket.on('status', function(data){
+    on_status(data)
+  });
+
+  socket.on('running_status', function(data){
+    on_running_status(data.is_running)
+  });
+});
+
+function on_start(data) {
+  current_data = data
+  on_running_status(data.is_running);
+  if (data.data != null)
+    make_download_list(data.data.list)
+}
+
+function on_status(data) {
+  on_running_status(data.is_running);
+  data = data.data
+  tmp = document.getElementById("progress_"+data.idx)
+  if (tmp != null) {
+    
+    tmp.style.width = data.percent+ '%';
+    document.getElementById("progress_"+data.idx+"_label").innerHTML = (data.epi_current+1) + ' / ' + data.epi_count + " (" + data.percent + "%)";
+  } 
+}
+
+function on_running_status(data) {
+  document.getElementById("status").innerHTML = data
+  if (data == '실행중') {
+    document.getElementById("download_btn").disabled = true;
+    document.getElementById("stop_btn").disabled = false;
+  } else {
+    document.getElementById("download_btn").disabled = false;
+    document.getElementById("stop_btn").disabled = true;
+  }
+}
+
+function make_download_list(data) {
+  str = '';
+  for (i in data) {
+    str += m_row_start();
+    tmp = data[i].title
+    if (data[i].score != null) {
+      tmp = tmp + ' (' + data[i].score + ')';
+    }
+    tmp = '<a href="'+data[i].url+'" target="_blank">' + tmp + "</a>"
+    str += m_col(5, tmp)
+    if (data[i].exist_download) {
+      tmp = '포함'
+    } else {
+      tmp = '제외'
+    }
+    str += m_col(1, tmp);
+    label = ''
+    progress = true
+    if (data[i].exist_filedata) {
+      tmp = 'O'
+      str += m_col(1, tmp);
+      tmp = '다운로드 기록이 있어 받지 않습니다.'      
+    } else {
+      tmp = '--'
+      if (data[i].percent != 0)
+        label = (data[i].epi_current+1) + ' / ' + data[i].epi_count + " (" + data[i].percent + "%)"
+      str += m_col(1, tmp);
+      tmp = m_progress('progress_'+i, data[i].percent,  label)
+    }
+    str += m_col(3, tmp);
+    tmp = m_button('manga_download_btn', '전체 다운로드', [{'key':'manga_id', 'value':data[i].manga_id}]);
+    str += m_col(2, tmp)
+    str += m_row_end();
+    if (i != data.length -1) str += m_hr(0);
+  }
+  document.getElementById("download_list_div").innerHTML = str;
+}
+
+
+$("body").on('click', '#stop_btn', function(e){
+  e.preventDefault();
+  $.ajax({
+    url: '/' + package_name + '/ajax/stop',
+    type: "POST", 
+    cache: false,
+    data: {},
+    dataType: "json",
+    success: function (ret) {
+      if (ret == 'ok') {
+        $.notify('<strong>잠시 후 중지됩니다.</strong>', {
+          type: 'success'
+        });
+      }
+    }
+  });
+});
+
+$("body").on('click', '#download_btn', function(e){
+  e.preventDefault();
+  manga_id = document.getElementById("manga_id").value
+  manga_download(manga_id)
+});
+
+$("body").on('click', '#manga_download_btn', function(e){
+  e.preventDefault();
+  manga_id = $(this).data("manga_id")
+  manga_download(manga_id)
+});
+
+function manga_download(manga_id) {
+  $.ajax({
+    url: '/' + package_name + '/ajax/download_by_manga_id',
+    type: "POST", 
+    cache: false,
+    data: {manga_id:manga_id},
+    dataType: "json",
+    success: function (ret) {
+      if (ret=='scheduler' || ret=='thread') {
+        $.notify('<strong>다운로드가 곧 시작합니다. ('+ret+')</strong>', {
+          type: 'success'
+        });
+      } else if (ret == 'is_running') {
+        $.notify('<strong>다운로드중입니다.</strong>', {
+          type: 'warning'
+        });
+      } else {
+        $.notify('<strong>다운로드 시작에 실패하였습니다.</strong>', {
+          type: 'warning'
+        });
+      }
+    }
+  });
+}
+</script>    
+{% endblock %}

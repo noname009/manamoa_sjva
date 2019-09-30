@@ -1,0 +1,11 @@
+{
+    "sitecheck" : "https://manamoa15.net",
+    "all_download" : "False",
+    "zip" : "True",
+    "cloudflare_bypass" : "False",
+    "proxy" : "False",
+    "proxy_url" : "",
+    "downlist" : [],
+    "discord_webhook" : "False",
+    "discord_webhook_url" : ""
+}

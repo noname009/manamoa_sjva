@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>kthoom Comic Reader</title>
+    <link rel="stylesheet" href="code/kthoom.css" type="text/css"/>
+    <link rel="icon" type="image/png" href="images/logo.png"/>
+
+    <!-- Needed for Traceur, the nomodule attribute is needed so that Traceur is only used by browsers
+         that don't support ES6 modules natively.  We can completely remove these two scripts once
+         all browsers support ES6 modules natively. -->
+    <script nomodule src="code/traceur/traceur.js"></script>
+    <script nomodule>
+      var options = new traceur.util.Options();
+      options.asyncFunctions = true;
+      var pathname = document.location.pathname;
+      if (pathname.indexOf('index.html') != -1) {
+        pathname = pathname.substr(0, pathname.indexOf('index.html'));
+      }
+      // Traceur's script location is different than native browsers.  I hacked this option so that
+      // we can use either Traceur or native browser parsing of modules.
+      options.scriptBaseURL = pathname + 'code/';
+      new traceur.WebPageTranscoder(document.location.href, options).run();
+    </script>
+
+    <!-- The crossorigin attribute is needed so that credentials are forwarded through UberProxy -->
+    <script type="module" src="code/kthoom.js" crossorigin="use-credentials"></script>
+
+    <script type="application/javascript" src="code/kthoom-google.js"></script>
+    <script type="application/javascript" src="code/kthoom-ipfs.js"></script>
+    <script type="application/javascript" src="code/bitjs/archive/archive.js"></script>
+    <script id="google"
+        src="https://apis.google.com/js/client.js?onload=kthoom.google.boot"
+        onerror="window.onload=kthoom.google.boot" async></script>
+  </head>
+  <body>
+    <div class="background">
+      <img id="logo" src="images/logo.svg" width="100%" />
+    </div>
+    <div class="foreground">
+      <div id="header">
+        <a id="menu-open" class="menuButton" href="#">
+          <svg viewBox="0 0 100 100">
+            <line stroke-width="10" stroke="yellow" x1="20" x2="80" y1="30" y2="30"></line>
+            <line stroke-width="10" stroke="yellow" x1="20" x2="80" y1="50" y2="50"></line>
+            <line stroke-width="10" stroke="yellow" x1="20" x2="80" y1="70" y2="70"></line>
+          </svg>
+        </a>
+        <div id="progress" class="hide">
+          <svg id="svgprogress" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+            <defs>
+              <pattern id="progress_pattern" width="30" height="20" patternUnits="userSpaceOnUse">
+                <rect width="100%" height="100%" fill="#cc2929"></rect>
+                <polygon fill="yellow" points="15,0 30,0 15,20 0,20"></polygon>
+              </pattern>
+            </defs>
+            <g>
+              <rect y="1" width="100%" height="15" fill="#777" stroke="white" rx="5" ry="5"></rect>
+              <rect id="loadmeter" width="50%" height="17" fill="#cc2929" rx="5" ry="5"></rect>
+              <text id="progress_title" y="13" x="99.5%" fill="white" font-size="12px" text-anchor="end">0%</text>
+              <rect id="zipmeter" width="0%" height="17" fill="url(#progress_pattern)" rx="5" ry="5"></rect>
+              <rect id="pagemeter" width="0%" height="17" opacity="0.8" fill="#007fff" rx="5" ry="5"></rect>
+              <text id="page" y="13" x="0.5%" fill="white" font-size="12px">0/0</text>
+            </g>
+          </svg>
+        </div>
+        <div id="nav" class="hide">
+          <button id="prevBook" title="Previous Book ([)" type="button">&lt;&lt;</button>
+          <button id="prev" title="Previous Page (Left Arrow)" type="button">&lt;</button>
+          <button id="toolbarbutton" title="Show/Hide the UI" type="button">-</button>
+          <button id="next" title="Next Page (Right Arrow)" type="button">&gt;</button>
+          <button id="nextBook" title="Next Book (])" type="button">&gt;&gt;</button>
+        </div>
+      </div> <!-- header -->
+      <div id="bookViewer">
+        <div id="page1">
+          <div id="firstText" style="display:none"></div>
+          <canvas id="firstImage"></canvas>
+        </div>
+        <div id="page2" style="display:none">
+          <div id="secondText" style="display:none"></div>
+          <canvas id="secondImage"></canvas>
+        </div>
+      </div> <!-- bookViewer -->
+      <div id="readingStack">
+        <div id="readingStackContents"></div>
+        <div id="readingStackTab" title="Reading Stack">
+          <svg stroke="currentColor" stroke-width="2" width="30" height="50">
+            <line x1="11" y1="14" x2="11" y2="36" />
+            <line x1="15" y1="14" x2="15" y2="36" />
+            <line x1="19" y1="14" x2="19" y2="36" />
+          </svg>
+        </div>
+      </div> <!-- readingStack -->
+    </div>
+    <div id="menu">
+      <div id="menuOverlay"></div>
+      <ul id ="menuItems" class="menuItems">
+        <li class="menuItem current">
+          <a id="menu-open-local-files" href="#">
+            <input id="menu-open-local-files-input" type="file" multiple>
+            Open from Your Computer
+          </a>
+        </li>
+        <li class="menuItem">
+          <a id="menu-open-url" href="#">
+            Open from URL
+          </a>
+        </li>
+        <li class="menuItem">
+          <a id="menu-open-google-drive" href="#">
+            Open from Google Drive
+          </a>
+        </li>
+        <li class="menuItem">
+          <a id="menu-open-ipfs-hash" href="#">
+            Open from IPFS
+          </a>
+        </li>
+        <li class="menuItem">
+          <a id="menu-help" href="#">
+            Help (Keyboard Shortcuts)
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div id="helpOverlay">
+      <section class="helpSection">
+        <h2>Navigation</h2>
+        <dl class="helplist">
+          <dt>?</dt>
+          <dd>Show/hide this help screen</dd>
+
+          <dt>&#x2190; <span class="separator">/</span> &#x2192;</dt>
+          <dd>Go to previous / next page</dd>
+
+          <dt>[ <span class="separator">/</span> ]</dt>
+          <dd>Load previous / next book</dd>
+
+          <dt>M</dt>
+          <dd>Open/close the Menu</dd>
+
+          <dt>S</dt>
+          <dd>Open/close the Reading stack</dd>
+
+          <dt>X</dt>
+          <dd>Show/hide the UI (toolbars)</dd>
+        </dl>
+      </section>
+      <section class="helpSection">
+        <h2>Book Viewing</h2>
+        <dl class="helplist">
+          <dt>L <span class="separator">/</span> R</dt>
+          <dd>Rotate left &#x27F2; / Rotate right &#x27F3;</dd>
+
+          <dt>H <span class="separator">/</span> W</dt>
+          <dd>Scale to height / Scale to width</dd>
+
+          <dt>B</dt>
+          <dd>Best fit mode</dd>
+
+          <dt>1 <span class="separator">/</span> 2</dt>
+          <dd>1-page view / 2-page view</dd>
+        </dl>
+      </section>
+
+      <section class="helpSection">
+        <h2>Loading Books</h2>
+        <dl class="helplist">
+          <dt>O</dt>
+          <dd>Open local books (use Shift to open multiple)</dd>
+
+          <dt>U</dt>
+          <dd>Open a book from a URL</dd>
+
+          <dt>G</dt>
+          <dd>Open a book from Google Drive</dd>
+        </dl>
+      </section>
+    </div>
+  </body>
+  <script>
+  </script>
+</html>
