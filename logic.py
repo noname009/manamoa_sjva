@@ -43,6 +43,7 @@ class Logic(object):
         "discord_webhook" : "False",
         "discord_webhook_url" : "", 
         'dfolder' : os.path.join(path_data, 'MangaDownload'),
+        "pagecount" : "1"
     }
 
 

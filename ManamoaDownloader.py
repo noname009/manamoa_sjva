@@ -266,21 +266,26 @@ class LogicMD(object):
                 url = LogicMD.json_data['sitecheck'] + '/bbs/page.php?hid=manga_detail&manga_id=' + LogicMD.current_manga_id
                 LogicMD.all_episode_download(url, check_download_list=False)
             else:
-                URL = '{}{}'.format(LogicMD.json_data['sitecheck'], '/bbs/board.php?bo_table=manga')
-                page_source = LogicMD.pageparser(URL)
-                soup = BeautifulSoup(page_source, 'html.parser')
                 if LogicMD.json_data['all_download'] == 'True':
-                    for t in soup.find_all('div', 'pull-right post-info'):
-                        url = '{}{}'.format(LogicMD.json_data['sitecheck'], t.find('a')['href'])
-                        LogicMD.all_episode_download(url)
+                    for pagecheck in range(int(LogicMD.json_data['pagecount'])):
+                        URL = '{}{}'.format(LogicMD.json_data['sitecheck'], '/bbs/board.php?bo_table=manga&page=' + str(pagecheck+1))
+                        page_source = LogicMD.pageparser(URL)
+                        soup = BeautifulSoup(page_source, 'html.parser')
+                        for t in soup.find_all('div', 'pull-right post-info'):
+                            url = '{}{}'.format(LogicMD.json_data['sitecheck'], t.find('a')['href'])
+                            LogicMD.all_episode_download(url)
                 else:
                     event = {'type':'recent_episode'}
                     event['list'] = []
-                    #for idx, t in enumerate(soup.find_all('div', class_='post-subject')):
-                    for idx, t in enumerate(soup.find_all('div', class_='post-row')):
-                        item = LogicMD.get_info(t)
-                        URL = '{}{}'.format(LogicMD.json_data['sitecheck'], t.find('a')['href'])
-                        event['list'].append({'idx':idx, 'title':item['title'], 'url':item['url'], 'exist_download':LogicMD.is_exist_download_list(item['title']), 'exist_filedata':item['url'] in LogicMD.filedata, 'main':item['main'], 'manga_id':item['manga_id'], 'score':item['score'], 'percent':0, 'epi_count':0, 'epi_current':0})
+                    for pagecheck in range(int(LogicMD.json_data['pagecount'])):
+                        URL = '{}{}'.format(LogicMD.json_data['sitecheck'], '/bbs/board.php?bo_table=manga&page=' + str(pagecheck+1))
+                        page_source = LogicMD.pageparser(URL)
+                        soup = BeautifulSoup(page_source, 'html.parser')
+                        for idx, t in enumerate(soup.find_all('div', class_='post-row')):
+                            idx = pagecheck*80 + idx
+                            item = LogicMD.get_info(t)
+                            URL = '{}{}'.format(LogicMD.json_data['sitecheck'], t.find('a')['href'])
+                            event['list'].append({'idx':idx, 'title':item['title'], 'url':item['url'], 'exist_download':LogicMD.is_exist_download_list(item['title']), 'exist_filedata':item['url'] in LogicMD.filedata, 'main':item['main'], 'manga_id':item['manga_id'], 'score':item['score'], 'percent':0, 'epi_count':0, 'epi_current':0})
                     LogicMD.send_to_listener(**event)
                     for item in event['list']:
                         if LogicMD.stop_flag:
