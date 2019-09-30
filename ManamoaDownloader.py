@@ -206,18 +206,14 @@ class LogicMD(object):
                     event['epi_current'] = idx
                     LogicMD.send_to_listener(**event)
             else:
-                if mangajpglist[0].find('img.') != -1:
-                    for idx, tt in enumerate(mangajpglist):
-                        image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                        LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath)
-                        event['epi_current'] = idx
-                        LogicMD.send_to_listener(**event)
-                else:
-                    for idx, tt in enumerate(mangajpglist):
-                        image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                        LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath)
-                        event['epi_current'] = idx
-                        LogicMD.send_to_listener(**event)
+                page_count = page_source2.find('var img_list1 = [')
+                page_count2 = page_source2.find(']', page_count)
+                mangajpglist = page_source2[page_count+16:page_count2].replace('\\','').replace('"','').split(',')
+                for idx, tt in enumerate(mangajpglist):
+                    image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
+                    LogicMD.manadownload(tt, image_filepath)
+                    event['epi_current'] = idx
+                    LogicMD.send_to_listener(**event)
             LogicMD.senddiscord(u'{} 다운로드 완료'.format(title))
             event['status'] = 'downloaded'
             LogicMD.send_to_listener(**event)
