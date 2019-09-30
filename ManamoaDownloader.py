@@ -90,7 +90,7 @@ class LogicMD(object):
                 Discord_Webhook_Url = LogicMD.json_data['discord_webhook_url']
                 webhook = DiscordWebhook(url=Discord_Webhook_Url, content=sendcontent)
                 webhook.execute()
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -101,7 +101,7 @@ class LogicMD(object):
             image_data = requests.get(url).content
             with open(image_filepath, 'wb') as handler:
                 handler.write(image_data)
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -116,11 +116,11 @@ class LogicMD(object):
                 for f in os.listdir(zip_path):
                     if f.endswith('.jpg'):
                         src = os.path.join(zip_path, f)
-                        fantasy_zip.write(src, os.path.basename(src), compress_type = zipfile.ZIP_DEFLATED)                     
+                        fantasy_zip.write(src, os.path.basename(src), compress_type = zipfile.ZIP_DEFLATED)
                 fantasy_zip.close()
             shutil.rmtree(zip_path)
             LogicMD.senddiscord(u'{}  압축 완료'.format(os.path.basename(zip_path)))
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -138,7 +138,7 @@ class LogicMD(object):
                         break
             else:
                 flag = True
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
         return flag
@@ -154,7 +154,7 @@ class LogicMD(object):
             elif LogicMD.json_data['proxy'] == 'False' and LogicMD.json_data['cloudflare_bypass'] == 'True':
                 page_source = LogicMD.scraper.get(URL).text
             elif LogicMD.json_data['proxy'] == 'True' and LogicMD.json_data['cloudflare_bypass'] == 'True':
-                page_source = LogicMD.scraper.get(URL,proxies={"https": LogicMD.json_data['proxy_url'] }).text           
+                page_source = LogicMD.scraper.get(URL,proxies={"https": LogicMD.json_data['proxy_url'] }).text
         except Exception as e:
             x = e.args
             for erro in x:
@@ -210,7 +210,6 @@ class LogicMD(object):
                 page_count2 = page_source2.find(']', page_count)
                 mangajpglist = page_source2[page_count+16:page_count2].replace('\\','').replace('"','').split(',')
                 for idx, tt in enumerate(mangajpglist):
-                    tt = requests.get(tt).url
                     image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
                     LogicMD.manadownload(tt, image_filepath)
                     event['epi_current'] = idx
@@ -223,7 +222,7 @@ class LogicMD(object):
                 event['status'] = 'zip'
                 LogicMD.send_to_listener(**event)
             LogicMD.filedata[url] = title
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -249,7 +248,7 @@ class LogicMD(object):
                         break
                     if not item['exist_filedata']:
                         LogicMD.episode_download(item['url'], os.path.join(LogicMD.json_data['dfolder'], maintitle, item['title']))
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -294,12 +293,12 @@ class LogicMD(object):
             event = {'type':'completed'}
             LogicMD.send_to_listener(**event)
             LogicMD.current_manga_id = None
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
-            logger.error(traceback.format_exc())      
-    
+            logger.error(traceback.format_exc())
 
-    
+
+
     @staticmethod
     def get_info(tag):
         try:
@@ -319,9 +318,9 @@ class LogicMD(object):
             tmp = p_tags[1].text
             item['score'] = int(tmp.split(' ')[1])
             return item
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
-            logger.error(traceback.format_exc())      
+            logger.error(traceback.format_exc())
 
 
     # for sjva
@@ -331,7 +330,7 @@ class LogicMD(object):
             if LogicMD.listener is not None:
                 args = []
                 LogicMD.listener.fire(*args, **kwargs)
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
