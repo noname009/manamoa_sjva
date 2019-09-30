@@ -212,7 +212,7 @@ class LogicMD(object):
                          LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath)
                          event['epi_current'] = idx
                          LogicMD.send_to_listener(**event)
-                 else:
+                else:
                      for idx, tt in enumerate(mangajpglist):
                          image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
                          LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath)
