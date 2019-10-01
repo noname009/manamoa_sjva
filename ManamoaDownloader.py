@@ -289,7 +289,7 @@ class LogicMD(object):
                         logger.debug('not match')
                     event = {'type':'recent_episode'}
                     event['list'] = []
-                    event['list'].append({'idx':0, 'title':title, 'url':url, 'exist_download':LogicMD.is_exist_download_list(title), 'exist_filedata':url in LogicMD.filedata, 'main':maintitle, 'manga_id':'', 'score':'', 'percent':0, 'epi_count':0, 'epi_current':0})
+                    event['list'].append({'idx':0, 'title':title, 'url':url, 'exist_download':LogicMD.is_exist_download_list(title), 'exist_filedata':url+'pass' in LogicMD.filedata, 'main':maintitle, 'manga_id':'', 'score':'', 'percent':0, 'epi_count':0, 'epi_current':0})
                     LogicMD.send_to_listener(**event)
                     LogicMD.episode_download(url, os.path.join(LogicMD.json_data['dfolder'], maintitle, title))
 
