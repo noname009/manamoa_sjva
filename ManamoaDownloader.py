@@ -322,13 +322,13 @@ class LogicMD(object):
             item['url'] = LogicMD.json_data['sitecheck'] + a_tags[2]['href']
             item['title'] = a_tags[2].text.replace(' NEW ','').strip()
             item['title'] = LogicMD.titlereplace(item['title'])
-            item['main'] = item['title'].replace(item['title'].split(' ')[-1],'').strip()
-            #match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>\w.*?화))?(\s\(완결\))?\s?$').match(item['title'])
-            #if match:
-            #    item['main'] = match.group('main')
-            #else:
-            #    item['main'] = item['title']
-            #    logger.debug('not match')
+            #item['main'] = item['title'].replace(item['title'].split(' ')[-1],'').strip()
+            match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>(\d|\-|\.)*?화))?(\s\(완결\))?\s?$').match(item['title'])
+            if match:
+                item['main'] = match.group('main')
+            else:
+                item['main'] = item['title']
+                logger.debug('not match')
             p_tags = tag.find_all('p')
             tmp = p_tags[1].text
             item['score'] = int(tmp.split(' ')[1])
