@@ -98,7 +98,8 @@ class LogicMD(object):
     @staticmethod
     def manadownload(url, image_filepath):
         try:
-            image_data = requests.get(url).content
+            headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
+            image_data = requests.get(url,headers=headers).content
             with open(image_filepath, 'wb') as handler:
                 handler.write(image_data)
         except Exception as e:
@@ -155,14 +156,15 @@ class LogicMD(object):
     @staticmethod
     def pageparser(URL):
         try:
+            headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
             if LogicMD.json_data['proxy'] == 'False' and LogicMD.json_data['cloudflare_bypass'] == 'False':
-                page_source = requests.get(URL).text
+                page_source = requests.get(URL,headers=headers).text
             elif LogicMD.json_data['proxy'] == 'True' and LogicMD.json_data['cloudflare_bypass'] == 'False':
-                page_source = requests.get(URL,proxies={"https": LogicMD.json_data['proxy_url']}).text
+                page_source = requests.get(URL,headers=headers,proxies={"https": LogicMD.json_data['proxy_url']}).text
             elif LogicMD.json_data['proxy'] == 'False' and LogicMD.json_data['cloudflare_bypass'] == 'True':
-                page_source = LogicMD.scraper.get(URL).text
+                page_source = LogicMD.scraper.get(URL,headers=headers).text
             elif LogicMD.json_data['proxy'] == 'True' and LogicMD.json_data['cloudflare_bypass'] == 'True':
-                page_source = LogicMD.scraper.get(URL,proxies={"https": LogicMD.json_data['proxy_url'] }).text
+                page_source = LogicMD.scraper.get(URL,headers=headers,proxies={"https": LogicMD.json_data['proxy_url'] }).text
         except Exception as e:
             x = e.args
             for erro in x:
