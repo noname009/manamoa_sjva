@@ -211,7 +211,7 @@ class Logic(object):
         except Exception as e: 
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
-
+        
     @staticmethod
     def get_zip_list():
         try:

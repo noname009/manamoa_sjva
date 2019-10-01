@@ -2,9 +2,10 @@
 {% block content %}
 
 <div>
-  {{ macros.setting_input_text_and_buttons('manga_id', 'Manga ID', [['download_btn', '다운로드']], desc=None, col='6') }}
+  {{ macros.setting_input_text_and_buttons('manga_id', 'Manga ID', [['download_btn', '다운로드']], desc='전체 다운로드', col='6') }}
+  {{ macros.setting_input_text_and_buttons('wr_id', 'wr ID', [['download_btn2', '다운로드']], desc='단일 다운로드', col='6') }}
   {{ macros.info_text_and_buttons('status', '상태', [['stop_btn', '중지']]) }}
-  
+
   {{ macros.m_row_start('0') }}
   {{ macros.m_row_end() }}
 
@@ -54,19 +55,21 @@ function on_status(data) {
   data = data.data
   tmp = document.getElementById("progress_"+data.idx)
   if (tmp != null) {
-    
+
     tmp.style.width = data.percent+ '%';
     document.getElementById("progress_"+data.idx+"_label").innerHTML = (data.epi_current+1) + ' / ' + data.epi_count + " (" + data.percent + "%)";
-  } 
+  }
 }
 
 function on_running_status(data) {
   document.getElementById("status").innerHTML = data
   if (data == '실행중') {
     document.getElementById("download_btn").disabled = true;
+    document.getElementById("download_btn2").disabled = true;
     document.getElementById("stop_btn").disabled = false;
   } else {
     document.getElementById("download_btn").disabled = false;
+    document.getElementById("download_btn2").disabled = false;
     document.getElementById("stop_btn").disabled = true;
   }
 }
@@ -92,7 +95,7 @@ function make_download_list(data) {
     if (data[i].exist_filedata) {
       tmp = 'O'
       str += m_col(1, tmp);
-      tmp = '다운로드 기록이 있어 받지 않습니다.'      
+      tmp = '다운로드 기록이 있어 받지 않습니다.'
     } else {
       tmp = '--'
       if (data[i].percent != 0)
@@ -114,7 +117,7 @@ $("body").on('click', '#stop_btn', function(e){
   e.preventDefault();
   $.ajax({
     url: '/' + package_name + '/ajax/stop',
-    type: "POST", 
+    type: "POST",
     cache: false,
     data: {},
     dataType: "json",
@@ -140,10 +143,16 @@ $("body").on('click', '#manga_download_btn', function(e){
   manga_download(manga_id)
 });
 
+$("body").on('click', '#download_btn2', function(e){
+  e.preventDefault();
+  wr_id = document.getElementById("wr_id").value
+  manga_download("wr"+wr_id)
+});
+
 function manga_download(manga_id) {
   $.ajax({
     url: '/' + package_name + '/ajax/download_by_manga_id',
-    type: "POST", 
+    type: "POST",
     cache: false,
     data: {manga_id:manga_id},
     dataType: "json",
@@ -164,5 +173,5 @@ function manga_download(manga_id) {
     }
   });
 }
-</script>    
+</script>
 {% endblock %}

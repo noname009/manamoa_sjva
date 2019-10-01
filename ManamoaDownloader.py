@@ -273,8 +273,26 @@ class LogicMD(object):
             LogicMD.is_running = True
             LogicMD.stop_flag = False
             if LogicMD.current_manga_id is not None:
-                url = LogicMD.json_data['sitecheck'] + '/bbs/page.php?hid=manga_detail&manga_id=' + LogicMD.current_manga_id
-                LogicMD.all_episode_download(url, check_download_list=False)
+                if LogicMD.current_manga_id.find('wr') == -1:
+                    url = LogicMD.json_data['sitecheck'] + '/bbs/page.php?hid=manga_detail&manga_id=' + LogicMD.current_manga_id
+                    LogicMD.all_episode_download(url, check_download_list=False)
+                else:
+                    url = LogicMD.json_data['sitecheck'] + '/bbs/board.php?bo_table=manga&wr_id=' + LogicMD.current_manga_id.replace('wr','')
+                    page_source = LogicMD.pageparser(url)
+                    soup = BeautifulSoup(page_source, 'html.parser')
+                    title = soup.title.text
+                    match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>(\d|\-|\.)*?(화|권)))?(\s\(완결\))?\s?$').match(title)
+                    if match:
+                        maintitle = match.group('main').strip()
+                    else:
+                        maintitle = title
+                        logger.debug('not match')
+                    event = {'type':'recent_episode'}
+                    event['list'] = []
+                    event['list'].append({'idx':0, 'title':title, 'url':url, 'exist_download':LogicMD.is_exist_download_list(title), 'exist_filedata':url in LogicMD.filedata, 'main':maintitle, 'manga_id':'', 'score':'', 'percent':0, 'epi_count':0, 'epi_current':0})
+                    LogicMD.send_to_listener(**event)
+                    LogicMD.episode_download(url, os.path.join(LogicMD.json_data['dfolder'], maintitle, title))
+
             else:
                 if LogicMD.json_data['all_download'] == 'True':
                     for pagecheck in range(int(LogicMD.json_data['pagecount'])):
