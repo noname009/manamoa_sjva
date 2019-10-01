@@ -41,7 +41,7 @@ plugin_info = {
     'icon' : '',
     'developer' : 'noname',
     'description' : '마나모아 다운로드',
-    'home' : '',
+    'home' : 'https://github.com/noname009/manamoa_sjva',
     'more' : '',
 }
 #########################################################
