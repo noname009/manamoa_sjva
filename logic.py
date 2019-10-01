@@ -79,7 +79,7 @@ class Logic(object):
                     pass
             
             # 다운로드 폴더 생성
-            download_path = Logic.get_setting_value('download_path')
+            download_path = Logic.get_setting_value('dfolder')
             if not os.path.exists(download_path):
                 try:
                     os.mkdir(download_path)
