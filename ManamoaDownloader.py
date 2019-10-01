@@ -323,7 +323,7 @@ class LogicMD(object):
             item['title'] = a_tags[2].text.replace(' NEW ','').strip()
             item['title'] = LogicMD.titlereplace(item['title'])
             #item['main'] = item['title'].replace(item['title'].split(' ')[-1],'').strip()
-            match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>(\d|\-|\.)*?화))?(\s\(완결\))?\s?$').match(item['title'])
+            match = re.compile(ur'(?P<main>.*?)((단행본.*?)?|특별편)?(\s(?P<sub>(\d|\-|\.)*?(화|권)))?(\s\(완결\))?\s?$').match(item['title'])
             if match:
                 item['main'] = match.group('main')
             else:
