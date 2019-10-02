@@ -36,6 +36,8 @@ try:
     from sqlitedict import SqliteDict
     import cfscrape
     from discord_webhook import DiscordWebhook
+    from google_drive_downloader import GoogleDriveDownloader as gdd
+
 except:
     requirements = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requirements.txt')
     if os.system('%s -m pip install -r %s' % (python, requirements)) != 0:
@@ -47,6 +49,7 @@ from bs4 import BeautifulSoup
 from sqlitedict import SqliteDict
 import cfscrape
 from discord_webhook import DiscordWebhook
+from google_drive_downloader import GoogleDriveDownloader as gdd
 #############################################################################################
 
 
@@ -99,9 +102,10 @@ class LogicMD(object):
     def manadownload(url, image_filepath):
         try:
             headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
-            image_data = requests.get(url,headers=headers).content
+            image_data = requests.get(url,headers=headers)
             with open(image_filepath, 'wb') as handler:
-                handler.write(image_data)
+                handler.write(image_data.content)
+            return image_data.status_code
         except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
@@ -201,6 +205,9 @@ class LogicMD(object):
             page_count = page_source2.find('var img_list = [')
             page_count2 = page_source2.find(']', page_count)
             mangajpglist = page_source2[page_count+16:page_count2].replace('\\','').replace('"','').split(',')
+            page_count22 = page_source2.find('var img_list1 = [')
+            page_count222 = page_source2.find(']', page_count22)
+            mangajpglist2 = page_source2[page_count22+16:page_count222].replace('\\','').replace('"','').split(',')
             event['status'] = 'downloading'
             event['epi_count'] = len(mangajpglist)
             LogicMD.send_to_listener(**event)
@@ -208,7 +215,7 @@ class LogicMD(object):
                 os.makedirs(download_path)
             tmp = os.path.join(download_path, str(1).zfill(5)+'.jpg')
             filesize = requests.get(mangajpglist[0]).status_code
-            if filesize != 404:
+            if filesize == 200:
                 for idx, tt in enumerate(mangajpglist):
                     image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
                     LogicMD.manadownload(tt, image_filepath)
@@ -216,17 +223,31 @@ class LogicMD(object):
                     LogicMD.send_to_listener(**event)
             else:
                 if mangajpglist[0].find('img.') != -1:
-                     for idx, tt in enumerate(mangajpglist):
-                         image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                         LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath)
-                         event['epi_current'] = idx
-                         LogicMD.send_to_listener(**event)
+                    for idx, tt in enumerate(mangajpglist):
+                        image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
+                        downresult = LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath)
+                        if downresult != 200 and mangajpglist2[0].find('google') != -1:
+                            for idx, tt in enumerate(mangajpglist2):
+                                image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
+                                gdd.download_file_from_google_drive(file_id=tt.replace('https://drive.google.com/uc?export=view&id=',''), dest_path=image_filepath)
+                                event['epi_current'] = idx
+                                LogicMD.send_to_listener(**event)
+                            break
+                        event['epi_current'] = idx
+                        LogicMD.send_to_listener(**event)
                 else:
-                     for idx, tt in enumerate(mangajpglist):
-                         image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                         LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath)
-                         event['epi_current'] = idx
-                         LogicMD.send_to_listener(**event)
+                    for idx, tt in enumerate(mangajpglist):
+                        image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
+                        downresult = LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath)
+                        if downresult != 200 and mangajpglist2[0].find('google') != -1:
+                            for idx, tt in enumerate(mangajpglist2):
+                                image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
+                                gdd.download_file_from_google_drive(file_id=tt.replace('https://drive.google.com/uc?export=view&id=',''), dest_path=image_filepath)
+                                event['epi_current'] = idx
+                                LogicMD.send_to_listener(**event)
+                            break
+                        event['epi_current'] = idx
+                        LogicMD.send_to_listener(**event)
             LogicMD.senddiscord(u'{} 다운로드 완료'.format(title))
             event['status'] = 'downloaded'
             LogicMD.send_to_listener(**event)
