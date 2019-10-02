@@ -207,9 +207,8 @@ class LogicMD(object):
             if not os.path.exists(download_path):
                 os.makedirs(download_path)
             tmp = os.path.join(download_path, str(1).zfill(5)+'.jpg')
-            LogicMD.manadownload(mangajpglist[0], tmp)
-            filesize = os.path.getsize(tmp)
-            if filesize > 300:
+            filesize = requests.get(mangajpglist[0]).status_code
+            if filesize == 408:
                 for idx, tt in enumerate(mangajpglist):
                     image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
                     LogicMD.manadownload(tt, image_filepath)
