@@ -41,7 +41,7 @@ class Logic(object):
         "proxy_url" : "",
         "downlist" : "",
         "discord_webhook" : "False",
-        "discord_webhook_url" : "", 
+        "discord_webhook_url" : "",
         'dfolder' : os.path.join(path_data, 'MangaDownload'),
         "pagecount" : "1"
     }
@@ -54,7 +54,7 @@ class Logic(object):
                 if db.session.query(ModelSetting).filter_by(key=key).count() == 0:
                     db.session.add(ModelSetting(key, value))
             db.session.commit()
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -63,7 +63,7 @@ class Logic(object):
     def plugin_load():
         try:
             logger.debug('%s plugin_load', package_name)
-            # DB 초기화 
+            # DB 초기화
             Logic.db_init()
 
             # 필요 패키지 설치
@@ -77,7 +77,7 @@ class Logic(object):
                 except:
                     logger.error('pip install error!!')
                     pass
-            
+
             # 다운로드 폴더 생성
             download_path = Logic.get_setting_value('dfolder')
             if not os.path.exists(download_path):
@@ -89,10 +89,10 @@ class Logic(object):
             from plugin import plugin_info
             Util.save_from_dict_to_json(plugin_info, os.path.join(os.path.dirname(__file__), 'info.json'))
 
-            # 자동시작 옵션이 있으면 보통 여기서 
+            # 자동시작 옵션이 있으면 보통 여기서
             if ModelSetting.query.filter_by(key='auto_start').first().value == 'True':
                 Logic.scheduler_start()
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -101,7 +101,7 @@ class Logic(object):
     def plugin_unload():
         try:
             logger.debug('%s plugin_unload', package_name)
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -113,7 +113,7 @@ class Logic(object):
             interval = Logic.get_setting_value('interval')
             job = Job(package_name, package_name, interval, Logic.scheduler_function, u"마나모아 다운로더", False)
             scheduler.add_job_instance(job)
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -123,7 +123,7 @@ class Logic(object):
         try:
             logger.debug('%s scheduler_stop', package_name)
             scheduler.remove_job(package_name)
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -136,8 +136,8 @@ class Logic(object):
                 entity = db.session.query(ModelSetting).filter_by(key=key).with_for_update().first()
                 entity.value = value
             db.session.commit()
-            return True                  
-        except Exception as e: 
+            return True
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
             return False
@@ -147,7 +147,7 @@ class Logic(object):
     def get_setting_value(key):
         try:
             return db.session.query(ModelSetting).filter_by(key=key).first().value
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -161,10 +161,12 @@ class Logic(object):
             arg['downlist'] = arg['downlist'].split('|')
             LogicMD.init(arg, Logic.listener)
             LogicMD.start()
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
-    
+
+
+    job_thread = None
     @staticmethod
     def one_execute():
         try:
@@ -178,21 +180,27 @@ class Logic(object):
                 def func():
                     time.sleep(2)
                     Logic.scheduler_function()
-                threading.Thread(target=func, args=()).start()
-                ret = 'thread'
-        except Exception as e: 
+                    Logic.job_thread = None
+                if Logic.job_thread is None:
+                    Logic.job_thread = threading.Thread(target=func, args=())
+                    Logic.job_thread.start()
+                    ret = 'thread'
+                else:
+                    ret = 'is_running'
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
             ret = 'fail'
         return ret
-    
+
+
     @staticmethod
     def reset_db():
         try:
             from ManamoaDownloader import LogicMD
             LogicMD.filedata.clear()
             return 'success'
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
             ret = 'fail'
@@ -208,10 +216,10 @@ class Logic(object):
             logger.debug(req.form)
             LogicMD.current_manga_id = req.form['manga_id']
             return Logic.one_execute()
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
-        
+
     @staticmethod
     def get_zip_list():
         try:
@@ -229,11 +237,11 @@ class Logic(object):
             #return '|'.join(ret)
             return ret
 
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
-        
-    
+
+
     current_list = None
     current_epi = None
     @staticmethod
@@ -258,7 +266,7 @@ class Logic(object):
                 Logic.current_epi['status'] = kwargs['status']
             elif kwargs['status'] == 'downloading':
                 Logic.current_epi['epi_count'] = kwargs['epi_count']
-                
+
                 Logic.current_epi['epi_current'] = kwargs['epi_current']
                 logger.debug('AAA %s %s', kwargs['epi_current'], Logic.current_epi['epi_current'])
                 Logic.current_epi['percent'] = (kwargs['epi_current']*100/(kwargs['epi_count']-1))
@@ -266,7 +274,7 @@ class Logic(object):
             plugin.socketio_callback('status', Logic.current_epi)
         try:
             pass
-        except Exception as e: 
+        except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
 
@@ -281,4 +289,4 @@ class Logic(object):
         LogicMD.stop_flag = True
         return 'ok'
 
-    
+
