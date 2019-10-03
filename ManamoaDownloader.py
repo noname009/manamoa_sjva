@@ -102,7 +102,7 @@ class LogicMD(object):
     def manadownload(url, image_filepath):
         try:
             headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
-            image_data = requests.get(url,headers=headers)
+            image_data = requests.get(url,headers=headers,stream=True)
             with open(image_filepath, 'wb') as handler:
                 handler.write(image_data.content)
             return image_data.status_code
