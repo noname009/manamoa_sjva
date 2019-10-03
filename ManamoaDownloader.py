@@ -274,6 +274,7 @@ class LogicMD(object):
                 for idx, t in enumerate(list(reversed(soup.find_all('div', class_='slot')))):
                     title = t.find('div', class_='title').text.strip().split('\n')[0].strip()
                     title = re.sub(r'\s{2,}', ' ', title).strip()
+                    title = LogicMD.titlereplace(title)
                     episode_url = LogicMD.json_data['sitecheck'] + t.find('a')['href']
                     event['list'].append({'idx':idx, 'title':title, 'url':episode_url, 'exist_download':LogicMD.is_exist_download_list(title), 'exist_filedata':episode_url in LogicMD.filedata, 'percent':0, 'epi_count':0, 'epi_current':0})
                 LogicMD.send_to_listener(**event)
