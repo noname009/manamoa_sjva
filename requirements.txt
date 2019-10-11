@@ -3,3 +3,4 @@ cfscrape
 bs4
 discord_webhook
 googledrivedownloader
+pillow
