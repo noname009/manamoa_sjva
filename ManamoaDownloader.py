@@ -37,6 +37,7 @@ try:
     import cfscrape
     from discord_webhook import DiscordWebhook
     from google_drive_downloader import GoogleDriveDownloader as gdd
+    from PIL import Image
 
 except:
     requirements = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'requirements.txt')
@@ -50,6 +51,7 @@ from sqlitedict import SqliteDict
 import cfscrape
 from discord_webhook import DiscordWebhook
 from google_drive_downloader import GoogleDriveDownloader as gdd
+from PIL import Image
 #############################################################################################
 
 
