@@ -101,12 +101,18 @@ class LogicMD(object):
 
 
     @staticmethod
-    def manadownload(url, image_filepath):
+    def manadownload(url, image_filepath, decoder):
         try:
             headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
             image_data = requests.get(url,headers=headers,stream=True)
-            with open(image_filepath, 'wb') as handler:
-                handler.write(image_data.content)
+            if decoder is None:
+                with open(image_filepath, 'wb') as handler:
+                    handler.write(image_data.content)
+            else:
+                from PIL import Image
+                im = Image.open(image_data.raw)
+                output = decoder.decode(im)
+                output.save(image_filepath)
             return image_data.status_code
         except Exception as e:
             logger.error('Exception:%s', e)
@@ -210,6 +216,20 @@ class LogicMD(object):
             page_count22 = page_source2.find('var img_list1 = [')
             page_count222 = page_source2.find(']', page_count22)
             mangajpglist2 = page_source2[page_count22+16:page_count222].replace('\\','').replace('"','').split(',')
+            
+            tmp1 = page_source2.find('var view_cnt =')
+            tmp1 = page_source2.find('=', tmp1) + 1
+            tmp2 = page_source2.find(';', tmp1)
+            view_cnt = int(page_source2[tmp1:tmp2].strip())
+            wr_id = int(url.split('wr_id=')[1].split('&')[0])
+            logger.debug('view_cnt :%s, wr_id:%s', view_cnt, wr_id)
+            if view_cnt == 0:
+                decoder = None
+            else:
+                from .decoder import Decoder
+                decoder = Decoder(view_cnt, wr_id)
+            
+
             event['status'] = 'downloading'
             event['epi_count'] = len(mangajpglist)
             LogicMD.send_to_listener(**event)
@@ -220,14 +240,14 @@ class LogicMD(object):
             if filesize == 200:
                 for idx, tt in enumerate(mangajpglist):
                     image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                    LogicMD.manadownload(tt, image_filepath)
+                    LogicMD.manadownload(tt, image_filepath, decoder)
                     event['epi_current'] = idx
                     LogicMD.send_to_listener(**event)
             else:
                 if mangajpglist[0].find('img.') != -1:
                     for idx, tt in enumerate(mangajpglist):
                         image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                        downresult = LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath)
+                        downresult = LogicMD.manadownload(tt.replace('img.','s3.'), image_filepath, decoder)
                         if downresult != 200 and mangajpglist2[0].find('google') != -1:
                             for idx, tt in enumerate(mangajpglist2):
                                 image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
@@ -240,7 +260,7 @@ class LogicMD(object):
                 else:
                     for idx, tt in enumerate(mangajpglist):
                         image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
-                        downresult = LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath)
+                        downresult = LogicMD.manadownload(tt.replace('s3.','img.'), image_filepath, decoder)
                         if downresult != 200 and mangajpglist2[0].find('google') != -1:
                             for idx, tt in enumerate(mangajpglist2):
                                 image_filepath = os.path.join(download_path, str(idx+1).zfill(5)+'.jpg')
@@ -395,6 +415,7 @@ class LogicMD(object):
         except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
+
 
 
 if __name__ == "__main__":
