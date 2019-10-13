@@ -164,10 +164,11 @@ class LogicMD(object):
             logger.error(traceback.format_exc())
         return flag
 
-
     @staticmethod
     def pageparser(URL):
         try:
+            from system import LogicSelenium
+            return LogicSelenium.get_pagesoruce_by_selenium(URL, '//footer[@class="at-footer"]')
             headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36"}
             if LogicMD.json_data['proxy'] == 'False' and LogicMD.json_data['cloudflare_bypass'] == 'False':
                 page_source = requests.get(URL,headers=headers).text
