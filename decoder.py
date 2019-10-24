@@ -49,7 +49,7 @@ class Decoder(object):
             tmp = []
             tmp.append(i)
             if self.id < 554714:
-                tmp.append(self.random(i))
+                tmp.append(self._random(i))
             else:
                 tmp.append(self.newRandom(i))
             self.order.append(tmp)
